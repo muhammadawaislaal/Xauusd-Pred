@@ -1,20 +1,20 @@
-# # ------------------ 🔐 USER ACCESS CONTROL CONFIG ------------------ #
-# import os, pickle, threading, schedule, time, requests, numpy as np, pandas as pd
-# import streamlit as st
-# import matplotlib.pyplot as plt
-# from datetime import datetime, timedelta
-# from tensorflow.keras.models import Sequential, load_model
-# from tensorflow.keras.layers import LSTM, Dense, Dropout
-# from sklearn.preprocessing import MinMaxScaler
-# import socket
+# ------------------ 🔐 USER ACCESS CONTROL CONFIG ------------------ #
+import os, pickle, threading, schedule, time, requests, numpy as np, pandas as pd
 import streamlit as st
-import os, pickle, threading, schedule, time, requests
-import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
+import socket
+# import streamlit as st
+# import os, pickle, threading, schedule, time, requests
+# import numpy as np, pandas as pd
+# import matplotlib.pyplot as plt
+# from datetime import datetime, timedelta
+# from tensorflow.keras.models import Sequential, load_model
+# from tensorflow.keras.layers import LSTM, Dense, Dropout
+# from sklearn.preprocessing import MinMaxScaler
 
 # ✅ Set page config FIRST
 st.set_page_config(page_title="🔹 XAU/USD Predictor Pro", layout="wide")
@@ -83,7 +83,7 @@ SEQ_LEN = 60
 ACCURACY = 95.3
 
 # ------------------ 🧾 STYLES ------------------ #
-st.set_page_config(page_title="🔹 XAU/USD Predictor Pro", layout="wide")
+# st.set_page_config(page_title="🔹 XAU/USD Predictor Pro", layout="wide")
 st.markdown("""<style>
 .header{background:#ffffff;padding:12px;text-align:center;color:#000;font-weight:bold}
 .footer{background:#0E1117;padding:8px;color:#ccc;text-align:center;font-size:14px}
