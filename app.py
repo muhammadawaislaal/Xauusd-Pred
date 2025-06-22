@@ -12,6 +12,7 @@ import socket
 ALLOWED_USERS = {
     # FORMAT: "password": ("allowed_ip", "YYYY-MM-DD")
     "Admin121": ("202.142.159.2", "2095-12-31"),
+    "Admin121": ("34.19.100.134", "2095-12-31"),
     "johnpass": ("182.178.91.20", "2025-08-01"),
     # ADD MORE USERS HERE 👇
     # "anotherpass": ("IP_ADDRESS", "YYYY-MM-DD")
