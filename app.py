@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
+import streamlit.components.v1 as components
 
 # --- CONFIG ---
 API_KEY = '2b89f159f0db4f3796e138044cf0a9f1'
