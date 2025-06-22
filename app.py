@@ -1,12 +1,26 @@
-# ------------------ 🔐 USER ACCESS CONTROL CONFIG ------------------ #
-import os, pickle, threading, schedule, time, requests, numpy as np, pandas as pd
+# # ------------------ 🔐 USER ACCESS CONTROL CONFIG ------------------ #
+# import os, pickle, threading, schedule, time, requests, numpy as np, pandas as pd
+# import streamlit as st
+# import matplotlib.pyplot as plt
+# from datetime import datetime, timedelta
+# from tensorflow.keras.models import Sequential, load_model
+# from tensorflow.keras.layers import LSTM, Dense, Dropout
+# from sklearn.preprocessing import MinMaxScaler
+# import socket
 import streamlit as st
+import os, pickle, threading, schedule, time, requests
+import numpy as np, pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
-import socket
+
+# ✅ Set page config FIRST
+st.set_page_config(page_title="🔹 XAU/USD Predictor Pro", layout="wide")
+
+# Your app code continues below...
+
 
 # ------------------ ✅ DEFINE ALLOWED USERS (Password, IP, Expiry) ------------------ #
 ALLOWED_USERS = {
