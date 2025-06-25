@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.preprocessing import MinMaxScaler
+import streamlit.components.v1 as components
 import socket
 # import streamlit as st
 # import os, pickle, threading, schedule, time, requests
@@ -242,11 +243,18 @@ if st.button("🔄 Run Now"):
 
 # ------------------ 📊 LIVE CHART ------------------ #
 st.markdown("## 📊 Live XAU/USD Chart")
-st.components.v1.html(
-    '<iframe src="https://s.tradingview.com/widgetembed/?symbol=OANDA:XAUUSD&interval=5&theme=light" '
-    'width="100%" height="400" frameborder="0"></iframe>',
-    height=450
-)
+
+tradingview_widget = """
+<iframe 
+    src="https://s.tradingview.com/widgetembed/?symbol=OANDA:XAUUSD&interval=5&theme=light" 
+    width="100%" 
+    height="400" 
+    frameborder="0"
+    allowfullscreen>
+</iframe>
+"""
+
+components.html(tradingview_widget, height=450)
 
 # ------------------ 🔚 FOOTER ------------------ #
 st.markdown("---")
