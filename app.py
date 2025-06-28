@@ -27,8 +27,8 @@ st.set_page_config(page_title="🔹 XAU/USD Predictor Pro", layout="wide")
 ALLOWED_USERS = {
     # FORMAT: "password": ("allowed_ip", "YYYY-MM-DD")
     "Admin121": ("35.197.92.111", "2095-12-31"),
-    "Admin121": ("202.142.159.2", "2095-12-31"), 
-    "Admin121": ("35.203.151.101", "2095-12-31"),
+    # "Admin121": ("202.142.159.2", "2095-12-31"), 
+    # "Admin121": ("35.203.151.101", "2095-12-31"),
     # ADD MORE USERS HERE 👇
     # "anotherpass": ("IP_ADDRESS", "YYYY-MM-DD")
 }
