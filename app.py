@@ -21,7 +21,11 @@ from ta.volatility import BollingerBands, AverageTrueRange
 from ta.volume import VolumeWeightedAveragePrice, OnBalanceVolumeIndicator
 from pandas_ta import cci
 import plotly.graph_objs as go
+import pytz
 import logging
+
+# Define Pakistan time zone (PKT, UTC+5)
+PKT = pytz.timezone('Asia/Karachi')
 
 # Decompress xauusd_lstm.keras.bz2
 compressed_file = "xauusd_lstm.keras.bz2"
@@ -37,7 +41,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S %Z')
 logger = logging.getLogger(__name__)
 
 # Set Streamlit page config
@@ -92,7 +96,7 @@ def check_access():
         st.stop()
 
     allowed_ip, expiry = user_info
-    if datetime.strptime(expiry, "%Y-%m-%d") < datetime.now():
+    if datetime.strptime(expiry, "%Y-%m-%d").replace(tzinfo=pytz.UTC) < datetime.now(pytz.UTC):
         st.sidebar.error("⏰ Subscription expired")
         st.stop()
 
@@ -142,7 +146,7 @@ st.markdown(f"""
 st.sidebar.header("📋 Trading Tips")
 st.sidebar.markdown("""
 - Signals: ±1.5 pips (XAU/USD), ±0.2 pips (ETH/USD) in 20 minutes  
-- Run at 5 AM & 5 PM or click "Run Now"  
+- Run at 5 AM & 5 PM PKT or click "Run Now"  
 - BUY/SELL: Strong trend; WAIT: Low volatility  
 - Lot sizes: 0.02 (XAU/USD), 0.10 (ETH/USD) for ~$2+ profit  
 - Use stop-loss/take-profit for risk management  
@@ -183,11 +187,11 @@ def fetch_binance_data(symbol):
             end_time = int(df['timestamp'].iloc[0]) - 1
             time.sleep(0.5)
         df = pd.concat(df_list).drop_duplicates().sort_values('timestamp')
-        df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms').dt.round('s')
+        df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms').dt.tz_localize('UTC').dt.tz_convert(PKT)
         df.set_index('datetime', inplace=True)
         df = clean_numeric_columns(df, ['open', 'high', 'low', 'close', 'volume'])
         df = df[['open', 'high', 'low', 'close', 'volume']]
-        df = df.resample('5min').agg({
+        df = df.resample('5min', origin='start').agg({
             'open': 'first',
             'high': 'max',
             'low': 'min',
@@ -218,12 +222,12 @@ def fetch_twelve_data(symbol, interval='1min', outputsize=8000):
             df = pd.DataFrame(data)
             if 'datetime' not in df.columns:
                 continue
-            df['datetime'] = pd.to_datetime(df['datetime']).dt.round('s')
+            df['datetime'] = pd.to_datetime(df['datetime']).dt.tz_localize('UTC').dt.tz_convert(PKT)
             df.set_index('datetime', inplace=True)
             df = clean_numeric_columns(df, ['open', 'high', 'low', 'close', 'volume'])
             if 'volume' not in df.columns:
                 df['volume'] = 1.0
-            df = df.resample('5min').agg({
+            df = df.resample('5min', origin='start').agg({
                 'open': 'first',
                 'high': 'max',
                 'low': 'min',
@@ -248,7 +252,7 @@ def fetch_local_xauusd_data():
         datetime_col = next((col for col in datetime_cols if col in df.columns), None)
         if not datetime_col:
             raise Exception("No datetime column in xauusd_hourly.csv")
-        df['datetime'] = pd.to_datetime(df[datetime_col]).dt.round('s')
+        df['datetime'] = pd.to_datetime(df[datetime_col]).dt.tz_localize('UTC').dt.tz_convert(PKT)
         df.set_index('datetime', inplace=True)
         required_cols = ['open', 'high', 'low', 'close']
         if not all(col in df.columns for col in required_cols):
@@ -257,7 +261,7 @@ def fetch_local_xauusd_data():
         if 'volume' not in df.columns:
             df['volume'] = 1.0
         df = df[required_cols + ['volume']]
-        df = df.resample('5min').interpolate(method='linear').ffill().bfill()
+        df = df.resample('5min', origin='start').interpolate(method='linear').ffill().bfill()
         df = df.tail(MAX_DATA_POINTS)
         df = add_technical_indicators(df)
         if len(df) < SEQ_LEN + 1:
@@ -269,14 +273,13 @@ def fetch_local_xauusd_data():
             base_price = 2450
             volatility = 0.5
             df = pd.DataFrame({
-                'datetime': pd.date_range(start=datetime.now() - timedelta(days=7), periods=MAX_DATA_POINTS, freq='5min'),
+                'datetime': pd.date_range(start=datetime.now(PKT) - timedelta(days=7), periods=MAX_DATA_POINTS, freq='5min', tz=PKT),
                 'open': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)),
                 'high': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)) + np.random.uniform(0, 0.5, MAX_DATA_POINTS),
                 'low': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)) - np.random.uniform(0, 0.5, MAX_DATA_POINTS),
                 'close': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)),
                 'volume': 100 + np.random.normal(0, 20, MAX_DATA_POINTS)
             })
-            df['datetime'] = df['datetime'].dt.round('s')
             df.to_csv(csv_file, index=False)
             df = df.set_index('datetime')
             df = clean_numeric_columns(df, ['open', 'high', 'low', 'close', 'volume'])
@@ -295,7 +298,7 @@ def fetch_local_ethusd_data():
         datetime_col = next((col for col in datetime_cols if col in df.columns), None)
         if not datetime_col:
             raise Exception(f"No datetime column in {csv_file}")
-        df['datetime'] = pd.to_datetime(df[datetime_col]).dt.round('s')
+        df['datetime'] = pd.to_datetime(df[datetime_col]).dt.tz_localize('UTC').dt.tz_convert(PKT)
         df.set_index('datetime', inplace=True)
         required_cols = ['open', 'high', 'low', 'close']
         if not all(col in df.columns for col in required_cols):
@@ -304,7 +307,7 @@ def fetch_local_ethusd_data():
         if 'volume' not in df.columns:
             df['volume'] = 1.0
         df = df[required_cols + ['volume']]
-        df = df.resample('5min').agg({
+        df = df.resample('5min', origin='start').agg({
             'open': 'first',
             'high': 'max',
             'low': 'min',
@@ -329,14 +332,13 @@ def fetch_local_ethusd_data():
             base_price = 2600
             volatility = 0.5
             df = pd.DataFrame({
-                'datetime': pd.date_range(start=datetime.now() - timedelta(days=7), periods=MAX_DATA_POINTS, freq='5min'),
+                'datetime': pd.date_range(start=datetime.now(PKT) - timedelta(days=7), periods=MAX_DATA_POINTS, freq='5min', tz=PKT),
                 'open': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)),
                 'high': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)) + np.random.uniform(0, 0.5, MAX_DATA_POINTS),
                 'low': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)) - np.random.uniform(0, 0.5, MAX_DATA_POINTS),
                 'close': base_price + np.cumsum(np.random.normal(0, volatility, MAX_DATA_POINTS)),
                 'volume': 100 + np.random.normal(0, 20, MAX_DATA_POINTS)
             })
-            df['datetime'] = df['datetime'].dt.round('s')
             df.to_csv(csv_file, index=False)
             df = df.set_index('datetime')
             df = clean_numeric_columns(df, ['open', 'high', 'low', 'close', 'volume'])
@@ -347,7 +349,7 @@ def fetch_local_ethusd_data():
             return pd.DataFrame()
 
 def fetch_data(symbol):
-    if symbol in DATA_CACHE and (datetime.now() - DATA_CACHE[symbol]['timestamp']).total_seconds() < 600:
+    if symbol in DATA_CACHE and (datetime.now(PKT) - DATA_CACHE[symbol]['timestamp']).total_seconds() < 600:
         logger.info(f"Using cached data for {symbol} with {len(DATA_CACHE[symbol]['data'])} points")
         return DATA_CACHE[symbol]['data']
     
@@ -360,7 +362,7 @@ def fetch_data(symbol):
         return pd.DataFrame()
     
     if not df.empty and len(df) >= SEQ_LEN + 1:
-        DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now()}
+        DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now(PKT)}
         logger.info(f"Fetched {len(df)} points for {symbol}")
         return df
     else:
@@ -371,14 +373,14 @@ def fetch_data(symbol):
             if not df.empty:
                 csv_file = 'xauusd_hourly.csv' if symbol == 'XAU/USD' else 'ethusd_5min.csv'
                 df.to_csv(csv_file)
-                DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now()}
+                DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now(PKT)}
                 logger.info(f"Fetched {len(df)} points for {symbol} from Binance {binance_symbol}")
                 return df
         df = fetch_twelve_data(symbol)
         if not df.empty:
             csv_file = 'xauusd_hourly.csv' if symbol == 'XAU/USD' else 'ethusd_5min.csv'
             df.to_csv(csv_file)
-            DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now()}
+            DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now(PKT)}
             logger.info(f"Fetched {len(df)} points for {symbol} from TwelveData")
         return df
 
@@ -395,7 +397,6 @@ def add_technical_indicators(df):
         df['stoch'] = StochasticOscillator(df['high'], df['low'], df['close']).stoch()
         df['obv'] = OnBalanceVolumeIndicator(df['close'], df['volume']).on_balance_volume()
         df['sentiment'] = df['close'].pct_change().rolling(12).mean().fillna(0)
-        # Ensure all features are present
         required_features = ['close', 'rsi', 'macd', 'bb_upper', 'atr', 'vwap', 'ema', 'adx', 'cci', 'stoch', 'obv']
         for feature in required_features:
             if feature not in df.columns:
@@ -463,14 +464,12 @@ def preprocess_data(df, scaler, features):
         logger.error("Empty dataframe in preprocess_data")
         return np.array([])
     try:
-        # Ensure all features are present and align with scaler
         available_features = [f for f in features if f in df.columns]
         if len(available_features) != len(features):
             missing = [f for f in features if f not in df.columns]
             logger.warning(f"Missing features: {missing}. Using available: {available_features}")
             if 'close' in available_features:
                 df = df[available_features].copy()
-                # Pad with zeros for missing features to match expected 11
                 for f in features:
                     if f not in available_features:
                         df[f] = 0.0
@@ -479,7 +478,6 @@ def preprocess_data(df, scaler, features):
         else:
             df = df[features].copy()
         
-        # Ensure feature names are preserved for scaler
         scaled = scaler.transform(df[features])
         if len(scaled) < SEQ_LEN:
             scaled = np.pad(scaled, ((SEQ_LEN - len(scaled), 0), (0, 0)), mode='edge')
@@ -504,15 +502,13 @@ def predict(df, model, scaler, features):
         return [], [], 0.0
     
     try:
-        # Use only LSTM for 90%+ accuracy, limit to 1-step forecast
-        nn_preds = model.predict(seq, steps=1).flatten()[:1]  # Take only the first prediction
+        nn_preds = model.predict(seq, steps=1).flatten()[:1]
         prices = scaler.inverse_transform(np.c_[nn_preds, np.zeros((1, len(features)-1))])[:, 0]
         current_time = df.index[-1]
         times = [current_time + timedelta(minutes=20)]
         
-        # Dynamic accuracy estimation using recent data
-        accuracy = 95.0  # Default to trained accuracy
-        if len(df) > SEQ_LEN + 100:  # Ensure enough data for accuracy calculation
+        accuracy = 95.0
+        if len(df) > SEQ_LEN + 100:
             recent_data = df[features].iloc[-100:].values
             if len(recent_data) > SEQ_LEN and len(recent_data[0]) == len(features):
                 X_recent = []
@@ -523,9 +519,9 @@ def predict(df, model, scaler, features):
                 X_recent_scaled = scaler.transform(X_recent.reshape(-1, len(features))).reshape(-1, SEQ_LEN, len(features))
                 y_pred = model.predict(X_recent_scaled, steps=len(X_recent)).flatten()[:len(y_recent)]
                 if len(y_pred) > 0 and len(y_recent) > 0:
-                    errors = np.abs((y_pred - y_recent) / (y_recent + 1e-10))  # Avoid division by zero
+                    errors = np.abs((y_pred - y_recent) / (y_recent + 1e-10))
                     accuracy = np.mean(errors < 0.01) * 100
-                    accuracy = max(90.0, min(99.9, accuracy))  # Cap to reflect training accuracy
+                    accuracy = max(90.0, min(99.9, accuracy))
                 else:
                     logger.warning("Insufficient data for accuracy calculation")
         
@@ -561,7 +557,7 @@ def make_signal(current, predicted, symbol):
     return signal, entry_price, stop_loss, take_profit
 
 def format_signal_info(current_price, signal, entry_price, stop_loss, take_profit, accuracy, symbol):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    timestamp = datetime.now(PKT).strftime('%Y-%m-%d %H:%M:%S %Z')
     entry_str = f"{entry_price:.2f} USD" if entry_price is not None else "None"
     stop_str = f"{stop_loss:.2f} USD" if stop_loss is not None else "None"
     profit_str = f"{take_profit:.2f} USD" if take_profit is not None else "None"
@@ -615,8 +611,9 @@ def plot_forecast(df, preds, times, entry_price, stop_loss, take_profit, symbol)
     return fig
 
 def schedule_jobs():
-    schedule.every().day.at("05:00").do(run_scheduled)
-    schedule.every().day.at("17:00").do(run_scheduled)
+    # Schedule in PKT (UTC+5)
+    schedule.every().day.at("05:00", tz=PKT).do(run_scheduled)
+    schedule.every().day.at("17:00", tz=PKT).do(run_scheduled)
     while True:
         schedule.run_pending()
         time.sleep(60)
@@ -627,7 +624,7 @@ def run_scheduled():
         df.name = symbol
         current_price = fetch_current_price(symbol)
         if df.empty or current_price is None:
-            st.session_state.notice = f"[{datetime.now().strftime('%I:%M %p')}] {symbol}: No data"
+            st.session_state.notice = f"[{datetime.now(PKT).strftime('%I:%M %p %Z')}] {symbol}: No data"
             logger.error(f"No data for {symbol}")
             continue
         model, scaler, xgb = load_model_scaler(symbol)
@@ -635,12 +632,12 @@ def run_scheduled():
             features = ['close', 'rsi', 'macd', 'bb_upper', 'atr', 'vwap', 'ema', 'adx', 'cci', 'stoch', 'obv']
             preds, times, accuracy = predict(df, model, scaler, features)
             signal, entry_price, stop_loss, take_profit = make_signal(current_price, preds, symbol)
-            st.session_state.notice = f"[{datetime.now().strftime('%I:%M %p')}] {symbol}: {signal}"
+            st.session_state.notice = f"[{datetime.now(PKT).strftime('%I:%M %p %Z')}] {symbol}: {signal}"
             st.session_state[f"{symbol}_last_signal"] = signal
             st.session_state[f"{symbol}_last_entry"] = entry_price
             st.session_state[f"{symbol}_last_stop"] = stop_loss
             st.session_state[f"{symbol}_last_profit"] = take_profit
-            st.session_state[f"{symbol}_last_update"] = datetime.now()
+            st.session_state[f"{symbol}_last_update"] = datetime.now(PKT)
             logger.info(f"Scheduled run for {symbol}: {signal}")
 
 if 'sched' not in st.session_state:
@@ -681,7 +678,7 @@ if st.button(f"🔄 Run {asset} Analysis"):
                 st.session_state[f"{asset}_last_entry"] = entry_price
                 st.session_state[f"{asset}_last_stop"] = stop_loss
                 st.session_state[f"{asset}_last_profit"] = take_profit
-                st.session_state[f"{asset}_last_update"] = datetime.now()
+                st.session_state[f"{asset}_last_update"] = datetime.now(PKT)
                 
                 st.markdown(f'<div class="signal-box">{signal}</div>', unsafe_allow_html=True)
                 st.code(format_signal_info(current_price, signal, entry_price, stop_loss, take_profit, accuracy, asset), language='')
@@ -703,10 +700,10 @@ if f"{asset}_last_signal" in st.session_state:
         st.session_state[f"{asset}_last_entry"],
         st.session_state[f"{asset}_last_stop"],
         st.session_state[f"{asset}_last_profit"],
-        95.0 if asset == 'ETH/USD' else 95.0,  # Default to 95% for last signal
+        95.0 if asset == 'ETH/USD' else 95.0,
         asset
     ), language='')
-    st.caption(f"Last updated: {st.session_state[f'{asset}_last_update'].strftime('%Y-%m-%d %H:%M:%S')}")
+    st.caption(f"Last updated: {st.session_state[f'{asset}_last_update'].strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
 # ------------------ LIVE CHARTS ------------------
 st.markdown(f"## 📊 Live {asset} Chart")
