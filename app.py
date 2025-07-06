@@ -1,4 +1,5 @@
 import os
+import bz2
 import pickle
 import threading
 import schedule
@@ -22,6 +23,14 @@ from pandas_ta import cci
 import plotly.graph_objs as go
 import logging
 
+# Decompress xauusd_lstm.keras.bz2
+compressed_file = "xauusd_lstm.keras.bz2"
+model_file = "xauusd_lstm.keras"
+if not os.path.exists(model_file):
+    with open(compressed_file, "rb") as f_in:
+        with open(model_file, "wb") as f_out:
+            f_out.write(bz2.decompress(f_in.read()))
+
 # Suppress TensorFlow warnings
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -33,6 +42,32 @@ logger = logging.getLogger(__name__)
 
 # Set Streamlit page config
 st.set_page_config(page_title="🔹 XAU/USD & ETH/USD Predictor", layout="wide")
+
+# Model files with relative paths
+MODEL_FILES = {
+    'XAU/USD': {
+        'model': 'xauusd_lstm.keras',
+        'scaler': 'xauusd_scaler.pkl',
+        'flag': 'xauusd_trained.flag',
+        'xgb': 'xauusd_lstm.xgb.pkl'
+    },
+    'ETH/USD': {
+        'model': 'ethusd_lstm.keras',
+        'scaler': 'ethusd_scaler.pkl',
+        'flag': 'ethusd_trained.flag',
+        'xgb': 'ethusd_lstm.xgb.pkl'
+    }
+}
+SEQ_LEN = 60
+FORECAST_HORIZON = 1
+PIP_VALUE = {'XAU/USD': 0.1, 'ETH/USD': 1.0}
+LOT_SIZE = {'XAU/USD': 0.02, 'ETH/USD': 0.10}
+STOP_LOSS_PIPS = {'XAU/USD': 50, 'ETH/USD': 15}
+TAKE_PROFIT_PIPS = {'XAU/USD': 125, 'ETH/USD': 40}
+DATA_CACHE = {}
+THRESHOLD = {'XAU/USD': 1.5, 'ETH/USD': 0.2}
+MAX_DATA_POINTS = 2000
+API_KEY = '2b89f159f0db4f3796e138044cf0a9f1'  # Replace with your TwelveData API key
 
 # ------------------ 🔒 AUTH FUNCTION ------------------
 ALLOWED_USERS = {
@@ -76,35 +111,6 @@ st.sidebar.info("""
 ✔️ Entry/Stop-Loss/Take-Profit  
 **Contact:** umtitechsolutions@gmail.com
 """)
-
-# ------------------ 🔧 CONFIG ------------------
-API_KEY = '2b89f159f0db4f3796e138044cf0a9f1'  # Replace with your TwelveData API key
-BASE_PATH = r"E:\personal projects\xauusd Prediction"
-if not os.path.exists(BASE_PATH):
-    os.makedirs(BASE_PATH)
-MODEL_FILES = {
-    'XAU/USD': {
-        'model': os.path.join(BASE_PATH, 'xauusd_lstm.keras'),
-        'scaler': os.path.join(BASE_PATH, 'xauusd_scaler.pkl'),
-        'flag': os.path.join(BASE_PATH, 'xauusd_trained.flag'),
-        'xgb': os.path.join(BASE_PATH, 'xauusd_lstm.xgb.pkl')
-    },
-    'ETH/USD': {
-        'model': os.path.join(BASE_PATH, 'ethusd_lstm.keras'),
-        'scaler': os.path.join(BASE_PATH, 'ethusd_scaler.pkl'),
-        'flag': os.path.join(BASE_PATH, 'ethusd_trained.flag'),
-        'xgb': os.path.join(BASE_PATH, 'ethusd_lstm.xgb.pkl')
-    }
-}
-SEQ_LEN = 60
-FORECAST_HORIZON = 1
-PIP_VALUE = {'XAU/USD': 0.1, 'ETH/USD': 1.0}
-LOT_SIZE = {'XAU/USD': 0.02, 'ETH/USD': 0.10}
-STOP_LOSS_PIPS = {'XAU/USD': 50, 'ETH/USD': 15}
-TAKE_PROFIT_PIPS = {'XAU/USD': 125, 'ETH/USD': 40}
-DATA_CACHE = {}
-THRESHOLD = {'XAU/USD': 1.5, 'ETH/USD': 0.2}
-MAX_DATA_POINTS = 2000
 
 # ------------------ 🧾 STYLES ------------------
 st.markdown("""<style>
@@ -234,7 +240,7 @@ def fetch_twelve_data(symbol, interval='1min', outputsize=8000):
         return pd.DataFrame()
 
 def fetch_local_xauusd_data():
-    csv_file = os.path.join(BASE_PATH, 'xauusd_hourly.csv')
+    csv_file = 'xauusd_hourly.csv'
     try:
         logger.info("Fetching local XAU/USD data")
         df = pd.read_csv(csv_file)
@@ -281,7 +287,7 @@ def fetch_local_xauusd_data():
             return pd.DataFrame()
 
 def fetch_local_ethusd_data():
-    csv_file = os.path.join(BASE_PATH, 'ethusd_5min.csv')
+    csv_file = 'ethusd_5min.csv'
     try:
         logger.info("Fetching local ETH/USD data")
         df = pd.read_csv(csv_file)
@@ -362,14 +368,14 @@ def fetch_data(symbol):
         for binance_symbol in binance_symbols:
             df = fetch_binance_data(binance_symbol)
             if not df.empty:
-                csv_file = os.path.join(BASE_PATH, 'xauusd_hourly.csv' if symbol == 'XAU/USD' else 'ethusd_5min.csv')
+                csv_file = 'xauusd_hourly.csv' if symbol == 'XAU/USD' else 'ethusd_5min.csv'
                 df.to_csv(csv_file)
                 DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now()}
                 logger.info(f"Fetched {len(df)} points for {symbol} from Binance {binance_symbol}")
                 return df
         df = fetch_twelve_data(symbol)
         if not df.empty:
-            csv_file = os.path.join(BASE_PATH, 'xauusd_hourly.csv' if symbol == 'XAU/USD' else 'ethusd_5min.csv')
+            csv_file = 'xauusd_hourly.csv' if symbol == 'XAU/USD' else 'ethusd_5min.csv'
             df.to_csv(csv_file)
             DATA_CACHE[symbol] = {'data': df, 'timestamp': datetime.now()}
             logger.info(f"Fetched {len(df)} points for {symbol} from TwelveData")
