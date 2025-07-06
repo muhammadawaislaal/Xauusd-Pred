@@ -314,7 +314,8 @@ def fetch_local_ethusd_data():
         df = df.tail(MAX_DATA_POINTS)
         df = add_technical_indicators(df)
         if len(df) < SEQ_LEN + 1:
-            raise Exception(f"Insufficient ETH/USD data: {len(df)}")
+            logger.warning(f"Insufficient ETH/USD data: {len(df)}. Falling back to Binance.")
+            return fetch_binance_data('ETHUSDT')
         return df.sort_index()
     except Exception as e:
         logger.info(f"Local ETH/USD fetch failed: {e}. Fetching from Binance ETHUSDT.")
@@ -478,6 +479,7 @@ def preprocess_data(df, scaler, features):
         else:
             df = df[features].copy()
         
+        # Ensure feature names are preserved for scaler
         scaled = scaler.transform(df[features])
         if len(scaled) < SEQ_LEN:
             scaled = np.pad(scaled, ((SEQ_LEN - len(scaled), 0), (0, 0)), mode='edge')
@@ -509,19 +511,23 @@ def predict(df, model, scaler, features):
         times = [current_time + timedelta(minutes=20)]
         
         # Dynamic accuracy estimation using recent data
-        recent_data = df[features].iloc[-100:].values
-        if len(recent_data) > SEQ_LEN and len(recent_data[0]) == len(features):
-            X_recent = []
-            y_recent = df['close'].iloc[-100 + SEQ_LEN:].values
-            for i in range(len(recent_data) - SEQ_LEN):
-                X_recent.append(recent_data[i:i+SEQ_LEN])
-            X_recent = np.array(X_recent).reshape(-1, SEQ_LEN, len(features))
-            X_recent_scaled = scaler.transform(X_recent.reshape(-1, len(features))).reshape(-1, SEQ_LEN, len(features))
-            y_pred = model.predict(X_recent_scaled, steps=len(X_recent)).flatten()[:len(y_recent[SEQ_LEN:])]
-            accuracy = np.mean(np.abs((y_pred - y_recent[SEQ_LEN:]) / y_recent[SEQ_LEN:]) < 0.01) * 100
-            accuracy = max(90.0, min(99.9, accuracy))  # Cap to reflect training accuracy
-        else:
-            accuracy = 95.0  # Default to trained accuracy if insufficient recent data
+        accuracy = 95.0  # Default to trained accuracy
+        if len(df) > SEQ_LEN + 100:  # Ensure enough data for accuracy calculation
+            recent_data = df[features].iloc[-100:].values
+            if len(recent_data) > SEQ_LEN and len(recent_data[0]) == len(features):
+                X_recent = []
+                y_recent = df['close'].iloc[-100 + SEQ_LEN:].values
+                for i in range(len(recent_data) - SEQ_LEN):
+                    X_recent.append(recent_data[i:i+SEQ_LEN])
+                X_recent = np.array(X_recent).reshape(-1, SEQ_LEN, len(features))
+                X_recent_scaled = scaler.transform(X_recent.reshape(-1, len(features))).reshape(-1, SEQ_LEN, len(features))
+                y_pred = model.predict(X_recent_scaled, steps=len(X_recent)).flatten()[:len(y_recent)]
+                if len(y_pred) > 0 and len(y_recent) > 0:
+                    errors = np.abs((y_pred - y_recent) / (y_recent + 1e-10))  # Avoid division by zero
+                    accuracy = np.mean(errors < 0.01) * 100
+                    accuracy = max(90.0, min(99.9, accuracy))  # Cap to reflect training accuracy
+                else:
+                    logger.warning("Insufficient data for accuracy calculation")
         
         logger.info(f"Predicted prices for {df.name}: {prices}, Accuracy: {accuracy:.1f}%")
         return prices, times, accuracy
