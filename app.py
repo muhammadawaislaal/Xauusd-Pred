@@ -77,6 +77,7 @@ API_KEY = '2b89f159f0db4f3796e138044cf0a9f1'  # Replace with your TwelveData API
 ALLOWED_USERS = {
     "Admin121": ("202.142.159.2", "2095-12-31"),
     "johnpass": ("182.178.91.20", "2025-08-01"),
+    "Shazy121": ("37.111.174.72", "2025-08-15")
 }
 
 def check_access():
@@ -108,7 +109,7 @@ check_access()
 # ------------------ 💳 PLAN INFO ------------------
 st.sidebar.markdown("### 💳 Subscription")
 st.sidebar.info("""
-**Golden Plan — $10/month**  
+**Golden Plan — $100/month**  
 ✔️ AI Predictions 2× Daily  
 ✔️ Real-time Signals (20-min)  
 ✔️ XAU/USD & ETH/USD Support  
