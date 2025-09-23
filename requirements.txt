@@ -10,3 +10,4 @@ pandas-ta==0.3.14b0
 plotly
 schedule
 matplotlib==3.10.3
+
