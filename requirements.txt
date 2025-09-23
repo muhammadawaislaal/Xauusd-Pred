@@ -6,8 +6,10 @@ xgboost
 scikit-learn
 streamlit
 ta
-pandas-ta==0.3.14b0
+pandas_ta
 plotly
 schedule
 matplotlib==3.10.3
+
+
 
