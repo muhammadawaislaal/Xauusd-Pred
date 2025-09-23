@@ -6,7 +6,7 @@ xgboost
 scikit-learn
 streamlit
 ta
-pandas_ta
+git+https://github.com/twopirllc/pandas-ta.git
 plotly
 schedule
 matplotlib==3.10.3
