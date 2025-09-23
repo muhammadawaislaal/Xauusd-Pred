@@ -1,12 +1,1 @@
-requests
-pandas
-numpy==1.26.4
-tensorflow==2.17.0
-xgboost==3.0.5
-scikit-learn==1.5.2
-streamlit==1.38.0
-ta==0.11.0
-git+https://github.com/twopirllc/pandas-ta.git
-plotly
-schedule
-matplotlib==3.9.2
+requests pandas numpy==1.26.4 tensorflow==2.17.0 xgboost scikit-learn streamlit ta pandas_ta plotly schedule matplotlib==3.10.3
