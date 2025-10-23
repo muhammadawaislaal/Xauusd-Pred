@@ -75,7 +75,7 @@ API_KEY = '2b89f159f0db4f3796e138044cf0a9f1'  # Replace with your TwelveData API
 
 # ------------------ 🔒 AUTH FUNCTION ------------------
 ALLOWED_USERS = {
-    "Admin121": ("160.30.109.106", "2095-12-31")
+    "Admin121": ("119.73.127.114", "2095-12-31")
 }
 
 def check_access():
@@ -714,6 +714,7 @@ components.html(chart_html[asset], height=550)
 
 # ------------------ FOOTER ------------------
 st.markdown("<div class='footer'>© 2025 XAU/USD & ETH/USD Predictor • Educational Project</div>", unsafe_allow_html=True)
+
 
 
 
