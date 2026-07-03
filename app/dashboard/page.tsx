@@ -9,7 +9,8 @@ import { AssetSelector } from '@/components/AssetSelector'
 import { getMockData } from '@/lib/mockData'
 import { DashboardCharts } from '@/components/DashboardCharts'
 import { TradingViewWidget } from '@/components/TradingViewWidget'
-import { getPredictedSignal } from '@/lib/api'
+import { LiveChat } from '@/components/LiveChat'
+import { getPredictedSignal, getRealTimeData } from '@/lib/api'
 import { TrendingUp, TrendingDown, Zap, Target, RefreshCw } from 'lucide-react'
 import type { DashboardData } from '@/lib/mockData'
 
@@ -437,6 +438,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+      
+      {/* Live Chat Support */}
+      <LiveChat />
     </div>
   )
 }
