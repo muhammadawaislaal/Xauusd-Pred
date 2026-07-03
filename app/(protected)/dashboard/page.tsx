@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
-import PredictionCard from '@/components/PredictionCard';
+import { ProtectedLayout } from '@/components/ProtectedLayout';
+import Sidebar from '@/components/Sidebar';
+import DashboardHeader from '@/components/DashboardHeader';
+import StatsCard from '@/components/StatsCard';
+import SignalBadge from '@/components/SignalBadge';
 import ChartDisplay from '@/components/ChartDisplay';
 import TechnicalIndicators from '@/components/TechnicalIndicators';
 import Footer from '@/components/Footer';
-import Nav from '@/components/Nav';
-import { ProtectedLayout } from '@/components/ProtectedLayout';
 import { PredictionResponse, MarketData } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import axios from 'axios';
@@ -24,7 +25,6 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
@@ -40,8 +40,7 @@ export default function Dashboard() {
       setLastUpdate(new Date().toLocaleTimeString());
     } catch (err) {
       console.error('[v0] Prediction fetch error:', err);
-      setError('Failed to fetch prediction. Using mock data.');
-      // Fallback to mock data
+      // Mock data fallback
       setPrediction({
         symbol: selectedAsset,
         current_price: selectedAsset === 'XAU/USD' ? 2450.50 : 2650.75,
@@ -72,7 +71,6 @@ export default function Dashboard() {
       setMarketData(response.data);
     } catch (err) {
       console.error('[v0] Market data fetch error:', err);
-      // Fallback to mock data
       const mockData: MarketData = {
         timestamp: Array.from({ length: 50 }, (_, i) => {
           const date = new Date();
@@ -91,133 +89,183 @@ export default function Dashboard() {
     }
   }, [selectedAsset]);
 
-  // Initial fetch and set up auto-refresh
   useEffect(() => {
     fetchPrediction();
     fetchMarketData();
   }, [selectedAsset, fetchPrediction, fetchMarketData]);
 
-  // Auto-refresh every 5 minutes
   useEffect(() => {
     if (!autoRefresh) return;
-
     const interval = setInterval(() => {
       fetchPrediction();
       fetchMarketData();
     }, 5 * 60 * 1000);
-
     return () => clearInterval(interval);
   }, [autoRefresh, fetchPrediction, fetchMarketData]);
 
-  const handleRunAnalysis = () => {
-    fetchPrediction();
-    fetchMarketData();
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <p className="mt-4 text-secondary">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <ProtectedLayout>
-      <div className="min-h-screen bg-background flex flex-col">
-        <Nav />
-        <Header selectedAsset={selectedAsset} onAssetChange={setSelectedAsset} />
+      <div className="flex min-h-screen bg-background">
+        <Sidebar />
+        
+        <main className="flex-1 lg:ml-0">
+          <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+            {/* Dashboard Header */}
+            <DashboardHeader
+              title="Dashboard"
+              lastUpdate={lastUpdate}
+              onRefresh={fetchPrediction}
+              isLoading={loading}
+              autoRefresh={autoRefresh}
+              onAutoRefreshChange={setAutoRefresh}
+            />
 
-        <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-          {/* Control Panel */}
-          <div className="bg-surface rounded-lg p-6 border border-border shadow-sm mb-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">Analysis Control</h2>
-                <p className="text-sm text-secondary">
-                  Last updated: {lastUpdate || 'Never'}
-                </p>
+            {/* Asset Selector */}
+            <div className="flex gap-3 mb-8">
+              <button
+                onClick={() => setSelectedAsset('XAU/USD')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  selectedAsset === 'XAU/USD'
+                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
+                    : 'bg-card-bg border border-border text-secondary hover:text-foreground'
+                }`}
+              >
+                XAU/USD
+              </button>
+              <button
+                onClick={() => setSelectedAsset('ETH/USD')}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  selectedAsset === 'ETH/USD'
+                    ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white'
+                    : 'bg-card-bg border border-border text-secondary hover:text-foreground'
+                }`}
+              >
+                ETH/USD
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-8 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                <p className="text-red-400 text-sm font-medium">{error}</p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <button
-                  onClick={handleRunAnalysis}
-                  disabled={loading}
-                  className={`px-6 py-2 rounded-lg font-semibold smooth-transition ${
-                    loading
-                      ? 'bg-border text-secondary cursor-not-allowed'
-                      : 'bg-primary text-white hover:bg-accent shadow-md'
-                  }`}
-                >
-                  {loading ? '⏳ Analyzing...' : '▶ Run Analysis'}
-                </button>
-                <button
-                  onClick={() => setAutoRefresh(!autoRefresh)}
-                  className={`px-4 py-2 rounded-lg font-semibold smooth-transition border ${
-                    autoRefresh
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-surface text-foreground border-border'
-                  }`}
-                >
-                  {autoRefresh ? '⏱ Auto-Refresh ON' : '⏸ Auto-Refresh OFF'}
-                </button>
+            )}
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatsCard
+                label="Current Price"
+                value={`$${prediction?.current_price.toFixed(2) || '0.00'}`}
+                change={
+                  prediction?.pip_difference
+                    ? {
+                        percentage: Math.abs(prediction.pip_difference),
+                        positive: prediction.pip_difference > 0,
+                      }
+                    : undefined
+                }
+                icon={<span>💰</span>}
+                color="blue"
+                loading={loading}
+              />
+              <StatsCard
+                label="High / Low"
+                value={`$${(prediction?.current_price || 0) + 10} / $${(prediction?.current_price || 0) - 10}`}
+                icon={<span>📊</span>}
+                color="purple"
+                loading={loading}
+              />
+              <StatsCard
+                label="Trading Signal"
+                value={<SignalBadge signal={prediction?.signal as any} confidence={prediction?.accuracy} />}
+                icon={<span>🎯</span>}
+                color="green"
+                loading={loading}
+              />
+              <StatsCard
+                label="Predicted Price"
+                value={`$${prediction?.predicted_price.toFixed(2) || '0.00'}`}
+                change={{
+                  percentage: ((prediction?.predicted_price || 0) - (prediction?.current_price || 0)) / (prediction?.current_price || 1) * 100,
+                  positive: (prediction?.predicted_price || 0) > (prediction?.current_price || 0),
+                }}
+                icon={<span>🔮</span>}
+                color="blue"
+                loading={loading}
+              />
+            </div>
+
+            {/* Technical Indicators Section */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Technical Indicators</h2>
+              <TechnicalIndicators prediction={prediction} loading={loading} />
+            </div>
+
+            {/* Risk Management Card */}
+            {prediction && (
+              <div className="bg-card-bg border border-border rounded-xl p-6 mb-8 card-shadow">
+                <h3 className="text-xl font-bold text-foreground mb-6">Risk Management</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 rounded-lg p-4">
+                    <p className="text-sm text-secondary mb-2">Entry Point</p>
+                    <p className="text-2xl font-bold text-purple-400">${prediction.entry_price.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/20 rounded-lg p-4">
+                    <p className="text-sm text-secondary mb-2">Stop Loss</p>
+                    <p className="text-2xl font-bold text-red-400">${prediction.stop_loss.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20 rounded-lg p-4">
+                    <p className="text-sm text-secondary mb-2">Take Profit</p>
+                    <p className="text-2xl font-bold text-green-400">${prediction.take_profit.toFixed(2)}</p>
+                  </div>
+                </div>
+                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-secondary">Risk/Reward Ratio</p>
+                    <span className="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-sm font-semibold">1:2.5 (Recommended)</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Chart Display */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Price Movement</h2>
+              <ChartDisplay data={marketData} loading={loading} />
+            </div>
+
+            {/* Information Box */}
+            <div className="bg-card-bg border border-border rounded-xl p-6 mb-8 card-shadow">
+              <h3 className="text-xl font-bold text-foreground mb-6">Understanding the Signals</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">📈</span>
+                    <h4 className="font-semibold text-green-400">BUY Signal</h4>
+                  </div>
+                  <p className="text-sm text-secondary">Strong upward movement expected. Entry recommended at current price with defined stop loss.</p>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">📉</span>
+                    <h4 className="font-semibold text-red-400">SELL Signal</h4>
+                  </div>
+                  <p className="text-sm text-secondary">Strong downward movement expected. Exit long positions or consider short positions.</p>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">⏳</span>
+                    <h4 className="font-semibold text-yellow-400">HOLD Signal</h4>
+                  </div>
+                  <p className="text-sm text-secondary">Low volatility or unclear direction. Avoid trading until clearer signals emerge.</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-yellow-700">⚠ {error}</p>
-            </div>
-          )}
-
-          {/* Prediction Cards */}
-          <PredictionCard prediction={prediction} loading={loading} />
-
-          {/* Technical Indicators */}
-          <TechnicalIndicators prediction={prediction} loading={loading} />
-
-          {/* Chart Display */}
-          <ChartDisplay data={marketData} loading={loading} />
-
-          {/* Info Box */}
-          <div className="bg-primary/10 border border-primary rounded-lg p-6 mt-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">How to Use This Predictor</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Signal Meanings</h4>
-                <ul className="space-y-2 text-sm text-secondary">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 font-bold">📈 BUY</span>
-                    <span>Strong upward movement expected (1.5+ pips for Gold, 0.2+ for Ethereum)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-600 font-bold">📉 SELL</span>
-                    <span>Strong downward movement expected</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold">⏳ WAIT</span>
-                    <span>Low volatility or unclear direction, avoid trading</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-foreground mb-2">Risk Management</h4>
-                <ul className="space-y-2 text-sm text-secondary">
-                  <li>Always use the provided Stop Loss level to limit losses</li>
-                  <li>Take Profit targets offer 1:2.5 risk/reward ratio</li>
-                  <li>Standard lot sizes: 0.02 (Gold), 0.10 (Ethereum)</li>
-                  <li>Analysis refreshes every 5 minutes with auto-refresh enabled</li>
-                </ul>
-              </div>
-            </div>
+            {/* Footer */}
+            <Footer />
           </div>
         </main>
-
-        <Footer />
       </div>
     </ProtectedLayout>
   );
