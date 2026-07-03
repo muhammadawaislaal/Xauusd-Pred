@@ -11,3 +11,6 @@ plotly>=5.23.0
 schedule>=1.2.0
 matplotlib>=3.10.0
 pytz>=2024.1
+flask>=3.0.0
+flask-cors>=4.0.0
+gunicorn>=21.0.0
