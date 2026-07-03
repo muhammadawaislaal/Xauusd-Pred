@@ -10,17 +10,17 @@ interface StatsCardProps {
 }
 
 const colorStyles = {
-  green: 'border-signal-buy/30 bg-signal-buy/5',
-  red: 'border-signal-sell/30 bg-signal-sell/5',
-  blue: 'border-accent-secondary/30 bg-accent-secondary/5',
-  purple: 'border-accent-primary/30 bg-accent-primary/5',
+  green: 'border-green-200 bg-green-50',
+  red: 'border-red-200 bg-red-50',
+  blue: 'border-blue-200 bg-blue-50',
+  purple: 'border-purple-200 bg-purple-50',
 }
 
 const textColorStyles = {
-  green: 'text-signal-buy',
-  red: 'text-signal-sell',
-  blue: 'text-accent-secondary',
-  purple: 'text-accent-primary',
+  green: 'text-green-600',
+  red: 'text-red-600',
+  blue: 'text-blue-600',
+  purple: 'text-purple-600',
 }
 
 export function StatsCard({
@@ -32,19 +32,19 @@ export function StatsCard({
   className = '',
 }: StatsCardProps) {
   return (
-    <div className={`bg-surface border border-border rounded-xl p-6 ${colorStyles[color]} ${className}`}>
+    <div className={`bg-white border rounded-xl p-6 ${colorStyles[color]} ${className}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-text-muted text-sm font-medium mb-2">{label}</p>
-          <p className="text-text-primary text-2xl font-bold font-mono">{value}</p>
+          <p className="text-slate-600 text-sm font-medium mb-2">{label}</p>
+          <p className="text-slate-900 text-2xl font-bold font-mono">{value}</p>
           {change !== undefined && (
             <div className="flex items-center gap-1 mt-2">
               {change >= 0 ? (
-                <ArrowUp size={16} className="text-signal-buy" />
+                <ArrowUp size={16} className="text-green-600" />
               ) : (
-                <ArrowDown size={16} className="text-signal-sell" />
+                <ArrowDown size={16} className="text-red-600" />
               )}
-              <span className={change >= 0 ? 'text-signal-buy' : 'text-signal-sell'}>
+              <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
                 {Math.abs(change).toFixed(2)}%
               </span>
             </div>

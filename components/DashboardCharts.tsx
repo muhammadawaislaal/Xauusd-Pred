@@ -17,9 +17,9 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-surface border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-text-primary text-sm font-mono">${payload[0].value.toFixed(2)}</p>
-          <p className="text-text-muted text-xs">{payload[0].payload.time}</p>
+        <div className="bg-white border border-slate-300 rounded-lg p-3 shadow-lg">
+          <p className="text-slate-900 text-sm font-mono">${payload[0].value.toFixed(2)}</p>
+          <p className="text-slate-600 text-xs">{payload[0].payload.time}</p>
         </div>
       )
     }
@@ -29,18 +29,18 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
   return (
     <div className="space-y-4">
       {/* Candlestick Chart */}
-      <div className="bg-surface border border-border rounded-xl p-6">
-        <h3 className="text-text-primary font-semibold mb-4">Price Action (5-min candlesticks)</h3>
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+        <h3 className="text-slate-900 font-semibold mb-4">Price Action (5-min candlesticks)</h3>
         <div className="w-full h-80 flex items-center justify-center">
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.candlestickData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="time" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="time" stroke="#64748b" />
+              <YAxis stroke="#64748b" />
               <Tooltip content={<CustomTooltip />} />
               <Bar
                 dataKey="close"
-                fill="#34d399"
+                fill="#22c55e"
                 radius={[4, 4, 0, 0]}
                 isAnimationActive={true}
               />
@@ -50,18 +50,18 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
       </div>
 
       {/* Forecast Chart */}
-      <div className="bg-surface border border-border rounded-xl p-6">
-        <h3 className="text-text-primary font-semibold mb-4">Price Forecast (20-min prediction)</h3>
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+        <h3 className="text-slate-900 font-semibold mb-4">Price Forecast (20-min prediction)</h3>
         <div className="w-full h-80 flex items-center justify-center relative">
           {/* Watermark */}
-          <div className="absolute bottom-4 right-4 text-text-muted/30 text-xs font-semibold pointer-events-none">
+          <div className="absolute bottom-4 right-4 text-slate-300 text-xs font-semibold pointer-events-none">
             Awais Trading Aala
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <ComposedChart data={forecastChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2a2a3a" />
-              <XAxis dataKey="time" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="time" stroke="#64748b" />
+              <YAxis stroke="#64748b" />
               <Tooltip content={<CustomTooltip />} />
               {/* Historical data line */}
               <Line

@@ -7,21 +7,21 @@ interface SignalBadgeProps {
 
 const signalStyles = {
   BUY: {
-    bg: 'bg-signal-buy/20',
-    border: 'border-signal-buy/50',
-    text: 'text-signal-buy',
-    glow: 'shadow-lg shadow-signal-buy/20',
+    bg: 'bg-green-100',
+    border: 'border-green-300',
+    text: 'text-green-700',
+    glow: 'shadow-lg shadow-green-300/50',
   },
   SELL: {
-    bg: 'bg-signal-sell/20',
-    border: 'border-signal-sell/50',
-    text: 'text-signal-sell',
+    bg: 'bg-red-100',
+    border: 'border-red-300',
+    text: 'text-red-700',
     glow: '',
   },
   WAIT: {
-    bg: 'bg-signal-wait/20',
-    border: 'border-signal-wait/50',
-    text: 'text-signal-wait',
+    bg: 'bg-amber-100',
+    border: 'border-amber-300',
+    text: 'text-amber-700',
     glow: '',
   },
 }

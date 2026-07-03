@@ -27,7 +27,7 @@ export function Sidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-surface border border-border rounded-lg text-text-primary hover:bg-background transition"
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition"
       >
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -35,26 +35,26 @@ export function Sidebar() {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="fixed inset-0 bg-black/30 z-30 md:hidden"
           onClick={() => setIsOpen(false)}
         ></div>
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-60 bg-surface border-r border-border flex flex-col transition-transform duration-300 z-40 md:translate-x-0 ${
+        className={`fixed left-0 top-0 h-screen w-60 bg-white border-r border-slate-300 flex flex-col transition-transform duration-300 z-40 md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-border">
+        <div className="p-6 border-b border-slate-300">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center">
-              <span className="text-white font-bold text-lg">⚡</span>
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+              <span className="text-white font-bold text-lg">📊</span>
             </div>
             <div>
-              <h1 className="text-text-primary font-bold text-lg">Trading</h1>
-              <p className="text-text-muted text-xs">Signals</p>
+              <h1 className="text-slate-900 font-bold text-lg">Trading</h1>
+              <p className="text-slate-600 text-xs">Signals</p>
             </div>
           </div>
         </div>
@@ -68,8 +68,8 @@ export function Sidebar() {
               onClick={() => setIsOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                 isActive(href)
-                  ? 'bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 text-text-primary'
-                  : 'text-text-muted hover:bg-background hover:text-text-primary'
+                  ? 'bg-blue-50 border border-blue-300 text-blue-700 font-medium'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
               <Icon size={20} />
@@ -79,19 +79,19 @@ export function Sidebar() {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-border space-y-4">
+        <div className="p-4 border-t border-slate-300 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
               <span className="text-white font-bold">A</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-text-primary text-sm font-semibold truncate">Trader</p>
-              <p className="text-text-muted text-xs truncate">trader@example.com</p>
+              <p className="text-slate-900 text-sm font-semibold truncate">Trader</p>
+              <p className="text-slate-600 text-xs truncate">trader@example.com</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-background border border-border rounded-lg text-text-primary hover:bg-signal-sell/10 hover:border-signal-sell/30 transition text-sm font-medium"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-700 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition text-sm font-medium"
           >
             <LogOut size={18} />
             Logout

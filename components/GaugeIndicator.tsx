@@ -8,19 +8,19 @@ interface GaugeIndicatorProps {
 }
 
 const colorStyles = {
-  green: 'bg-signal-buy',
-  red: 'bg-signal-sell',
-  blue: 'bg-accent-secondary',
-  purple: 'bg-accent-primary',
-  yellow: 'bg-signal-wait',
+  green: 'bg-green-500',
+  red: 'bg-red-500',
+  blue: 'bg-blue-500',
+  purple: 'bg-purple-500',
+  yellow: 'bg-amber-500',
 }
 
 const statusColors = {
-  green: 'text-signal-buy',
-  red: 'text-signal-sell',
-  blue: 'text-accent-secondary',
-  purple: 'text-accent-primary',
-  yellow: 'text-signal-wait',
+  green: 'text-green-600',
+  red: 'text-red-600',
+  blue: 'text-blue-600',
+  purple: 'text-purple-600',
+  yellow: 'text-amber-600',
 }
 
 export function GaugeIndicator({
@@ -36,17 +36,17 @@ export function GaugeIndicator({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-text-muted text-sm font-medium">{label}</span>
-        <span className="text-text-primary text-sm font-mono font-bold">{value.toFixed(2)}</span>
+        <span className="text-slate-600 text-sm font-medium">{label}</span>
+        <span className="text-slate-900 text-sm font-mono font-bold">{value.toFixed(2)}</span>
       </div>
-      <div className="w-full bg-background rounded-full h-2 overflow-hidden border border-border">
+      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden border border-slate-300">
         <div
           className={`h-full ${colorStyles[color]} transition-all duration-300`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
         ></div>
       </div>
       {status && (
-        <p className={`text-xs mt-2 ${statusColors[color]}`}>
+        <p className={`text-xs mt-2 font-medium ${statusColors[color]}`}>
           {status}
         </p>
       )}

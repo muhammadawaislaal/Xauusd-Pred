@@ -38,7 +38,7 @@ export default function AccountPage() {
   const usagePercentage = (usage.predictions / usage.total) * 100
 
   return (
-    <div className="flex bg-background min-h-screen">
+    <div className="flex bg-slate-50 min-h-screen">
       <Sidebar />
 
       {/* Main Content */}
@@ -46,20 +46,20 @@ export default function AccountPage() {
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2">Account Settings</h1>
-            <p className="text-text-muted">Manage your profile and subscription</p>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Account Settings</h1>
+            <p className="text-slate-600">Manage your profile and subscription</p>
           </div>
 
           {/* Profile Section */}
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-6">Profile Information</h2>
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6">Profile Information</h2>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center flex-shrink-0">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-bold text-3xl">{userData.avatar}</span>
               </div>
               <div className="flex-1">
-                <h3 className="text-text-primary font-semibold text-lg mb-2">{userData.name}</h3>
-                <p className="text-text-muted flex items-center gap-2">
+                <h3 className="text-slate-900 font-semibold text-lg mb-2">{userData.name}</h3>
+                <p className="text-slate-600 flex items-center gap-2">
                   <Mail size={16} />
                   {userData.email}
                 </p>
@@ -68,10 +68,10 @@ export default function AccountPage() {
           </div>
 
           {/* Subscription Section */}
-          <div className="bg-surface border border-border rounded-xl p-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-text-primary">Subscription</h2>
-              <span className={`px-4 py-2 rounded-full text-sm font-semibold ${subscription.status === 'Active' ? 'bg-signal-buy/20 text-signal-buy flex items-center gap-2' : 'bg-signal-sell/20 text-signal-sell flex items-center gap-2'}`}>
+              <h2 className="text-lg font-semibold text-slate-900">Subscription</h2>
+              <span className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 ${subscription.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                 {subscription.status === 'Active' ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
                 {subscription.status}
               </span>
@@ -80,121 +80,100 @@ export default function AccountPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               {/* Plan Info */}
               <div>
-                <p className="text-text-muted text-sm mb-2">Current Plan</p>
-                <h3 className="text-text-primary font-semibold text-2xl mb-1">{subscription.plan}</h3>
-                <p className="text-text-muted text-lg">
+                <p className="text-slate-600 text-sm mb-2">Current Plan</p>
+                <h3 className="text-slate-900 font-semibold text-2xl mb-1">{subscription.plan}</h3>
+                <p className="text-slate-600 text-lg">
                   {subscription.price}<span className="text-sm">{subscription.billing}</span>
                 </p>
               </div>
 
               {/* Expiry Date */}
-              <div className="flex items-center gap-4 p-4 bg-background border border-border rounded-lg">
-                <Calendar className="text-accent-primary flex-shrink-0" size={24} />
+              <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <Calendar className="text-blue-600 flex-shrink-0" size={24} />
                 <div>
-                  <p className="text-text-muted text-sm">Expiry Date</p>
-                  <p className="text-text-primary font-semibold">{subscription.expiryDate}</p>
+                  <p className="text-slate-600 text-sm">Expiry Date</p>
+                  <p className="text-slate-900 font-semibold">{subscription.expiryDate}</p>
                 </div>
               </div>
             </div>
 
             {/* Features */}
-            <div className="mb-6">
-              <h4 className="text-text-primary font-semibold mb-4">Plan Features</h4>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <p className="text-slate-600 text-sm mb-4 font-medium">INCLUDED FEATURES</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {subscription.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-text-muted">
-                    <CheckCircle size={18} className="text-signal-buy flex-shrink-0" />
-                    {feature}
-                  </li>
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <CheckCircle size={18} className="text-green-600 flex-shrink-0" />
+                    <span className="text-slate-900">{feature}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
-
-            {/* Renew Button */}
-            <button className="w-full bg-gradient-to-r from-accent-primary to-accent-secondary hover:shadow-glow-purple text-white font-semibold py-3 rounded-lg transition">
-              Renew Subscription
-            </button>
           </div>
 
-          {/* Usage Section */}
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
-              <TrendingUp size={20} className="text-accent-primary" />
-              API Usage
-            </h2>
+          {/* Usage Statistics */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <TrendingUp size={20} />
+                API Usage
+              </h2>
+            </div>
 
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-text-primary font-medium">Predictions Used</span>
-                  <span className="text-text-muted text-sm">
-                    {usage.predictions} / {usage.total}
-                  </span>
+                  <span className="text-slate-600 font-medium">Predictions Used</span>
+                  <span className="text-slate-900 font-semibold">{usage.predictions} / {usage.total}</span>
                 </div>
-                <div className="w-full bg-background rounded-full h-3 overflow-hidden border border-border">
+                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden border border-slate-300">
                   <div
-                    className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
                     style={{ width: `${usagePercentage}%` }}
                   ></div>
                 </div>
-                <p className="text-text-muted text-xs mt-2">
-                  {usage.remaining} predictions remaining until next billing cycle
-                </p>
+                <p className="text-xs text-slate-500 mt-1">{usage.remaining} predictions remaining</p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-300">
+                <p className="text-sm text-slate-600 mb-3">Reset on next billing cycle (August 3, 2024)</p>
+                <button className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition">
+                  Upgrade Plan
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Settings Section */}
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-6">Preferences</h2>
-
+          {/* Notifications Settings */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 mb-6">Notification Preferences</h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-background border border-border rounded-lg">
+              <label className="flex items-center gap-3 p-4 border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                <input type="checkbox" defaultChecked className="w-5 h-5 cursor-pointer" />
                 <div>
-                  <p className="text-text-primary font-medium">Email Notifications</p>
-                  <p className="text-text-muted text-sm">Receive alerts for new trading signals</p>
+                  <p className="text-slate-900 font-medium">Email Notifications</p>
+                  <p className="text-slate-600 text-sm">Receive signal alerts via email</p>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    className="w-5 h-5 cursor-pointer"
-                  />
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-background border border-border rounded-lg">
+              </label>
+              <label className="flex items-center gap-3 p-4 border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                <input type="checkbox" defaultChecked className="w-5 h-5 cursor-pointer" />
                 <div>
-                  <p className="text-text-primary font-medium">Push Notifications</p>
-                  <p className="text-text-muted text-sm">Get real-time alerts on your device</p>
+                  <p className="text-slate-900 font-medium">Push Notifications</p>
+                  <p className="text-slate-600 text-sm">Real-time trading signal alerts</p>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    defaultChecked={false}
-                    className="w-5 h-5 cursor-pointer"
-                  />
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-background border border-border rounded-lg">
+              </label>
+              <label className="flex items-center gap-3 p-4 border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                <input type="checkbox" className="w-5 h-5 cursor-pointer" />
                 <div>
-                  <p className="text-text-primary font-medium">Daily Summary</p>
-                  <p className="text-text-muted text-sm">Receive a summary of daily predictions</p>
+                  <p className="text-slate-900 font-medium">Daily Summary</p>
+                  <p className="text-slate-600 text-sm">Daily trading performance report</p>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    className="w-5 h-5 cursor-pointer"
-                  />
-                </label>
-              </div>
+              </label>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="text-center py-8 text-text-muted text-sm border-t border-border">
+          <div className="text-center py-8 text-slate-600 text-sm border-t border-slate-300">
             <p>Developed by Muhammad Awais Laal • Educational Project</p>
           </div>
         </div>

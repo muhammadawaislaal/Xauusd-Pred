@@ -2,15 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const [password, setPassword] = useState('')
-  const [ipAddress, setIpAddress] = useState('')
+  const [ipAddress, setIpAddress] = useState('Detecting...')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [ipAuthorized, setIpAuthorized] = useState<boolean | null>(null)
+
+  // List of authorized IPs (from backend)
+  const AUTHORIZED_IPS = ['127.0.0.1', '::1', '192.168.1.1', '203.0.113.45', '18.219.13.193', '::ffff:127.0.0.1'] // Mock authorized IPs
 
   useEffect(() => {
     // Fetch user's IP address
@@ -19,8 +23,13 @@ export default function LoginPage() {
         const response = await fetch('https://api.ipify.org?format=json')
         const data = await response.json()
         setIpAddress(data.ip)
+        
+        // Check if IP is in authorized list
+        const isAuthorized = AUTHORIZED_IPS.includes(data.ip)
+        setIpAuthorized(isAuthorized)
       } catch (err) {
         setIpAddress('Unable to detect')
+        setIpAuthorized(false)
       }
     }
     fetchIP()
@@ -31,48 +40,59 @@ export default function LoginPage() {
     setError('')
     setIsLoading(true)
 
-    // Simulate login validation
+    // Check if IP is authorized
+    if (!ipAuthorized) {
+      setError('Your IP address is not authorized for this subscription. Contact support to whitelist your IP.')
+      setIsLoading(false)
+      return
+    }
+
+    // Validate password
     if (password.length < 6) {
       setError('Password must be at least 6 characters')
       setIsLoading(false)
       return
     }
 
-    // Mock authentication - replace with actual backend call
-    if (password === 'demo123') {
+    // Authentication with correct password
+    if (password === 'Admin121') {
+      // Store auth token in localStorage
+      localStorage.setItem('auth_token', 'demo_token_' + Date.now())
+      localStorage.setItem('user_ip', ipAddress)
+      
       setTimeout(() => {
         router.push('/dashboard')
       }, 500)
     } else {
-      setError('Invalid password')
+      setError('Invalid password. Please try again.')
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-[#1a1a2e] flex items-center justify-center px-4">
-      {/* Background gradient elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-4">
+      {/* Subtle background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-accent-primary/20 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-accent-secondary/20 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-100/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-100/20 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="bg-surface border border-border rounded-xl shadow-2xl p-8">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
           {/* Header */}
           <div className="mb-8 text-center">
-            <div className="inline-block mb-4 p-3 bg-gradient-to-br from-accent-primary to-accent-secondary rounded-lg">
-              <span className="text-white font-bold text-2xl">⚡</span>
+            <div className="inline-block mb-4 p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl">
+              <span className="text-white font-bold text-2xl">📊</span>
             </div>
-            <h1 className="text-2xl font-bold text-text-primary mb-2">Trading Signals</h1>
-            <p className="text-text-muted text-sm">AI-Powered XAU/USD & ETH/USD Predictions</p>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Trading Signals</h1>
+            <p className="text-slate-600 text-sm">AI-Powered XAU/USD & ETH/USD Predictions</p>
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-5">
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -82,13 +102,13 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full bg-background border border-border rounded-lg px-4 py-3 text-text-primary placeholder-text-muted/50 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition"
                   disabled={isLoading}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -98,31 +118,40 @@ export default function LoginPage() {
 
             {/* IP Address */}
             <div>
-              <label htmlFor="ip" className="block text-sm font-medium text-text-primary mb-2">
+              <label htmlFor="ip" className="block text-sm font-semibold text-slate-700 mb-2">
                 IP Address
               </label>
-              <input
-                id="ip"
-                type="text"
-                value={ipAddress}
-                readOnly
-                className="w-full bg-background border border-border rounded-lg px-4 py-3 text-text-muted cursor-not-allowed opacity-60 focus:outline-none"
-              />
-              <p className="text-xs text-text-muted mt-1">Automatically detected for subscription verification</p>
+              <div className="relative">
+                <input
+                  id="ip"
+                  type="text"
+                  value={ipAddress}
+                  readOnly
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 text-slate-600 cursor-not-allowed focus:outline-none"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {ipAuthorized === true && <CheckCircle size={20} className="text-green-500" />}
+                  {ipAuthorized === false && <AlertCircle size={20} className="text-red-500" />}
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                {ipAuthorized === true ? '✓ IP is authorized' : ipAuthorized === false ? '✗ IP not authorized' : 'Checking authorization...'}
+              </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="bg-signal-sell/10 border border-signal-sell/30 rounded-lg p-3 text-signal-sell text-sm">
-                {error}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm flex gap-2">
+                <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
               </div>
             )}
 
             {/* Sign In Button */}
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-accent-primary to-accent-secondary hover:shadow-glow-purple disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
+              disabled={isLoading || ipAuthorized === false}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -136,15 +165,18 @@ export default function LoginPage() {
           </form>
 
           {/* Demo info */}
-          <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-xs text-text-muted text-center">
-              Demo password: <code className="bg-background px-2 py-1 rounded text-text-primary font-mono">demo123</code>
+          <div className="mt-6 pt-6 border-t border-slate-200">
+            <p className="text-xs text-slate-500 text-center">
+              Demo password: <code className="bg-slate-100 px-2 py-1 rounded text-slate-700 font-mono">Admin121</code>
+            </p>
+            <p className="text-xs text-slate-400 text-center mt-2">
+              IP-based authentication enabled
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <p className="text-center text-text-muted text-xs mt-6">
+        <p className="text-center text-slate-600 text-xs mt-6">
           Developed by Muhammad Awais Laal • Educational Project
         </p>
       </div>
