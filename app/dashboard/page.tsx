@@ -6,39 +6,53 @@ import { StatsCard } from '@/components/StatsCard'
 import { SignalBadge } from '@/components/SignalBadge'
 import { GaugeIndicator } from '@/components/GaugeIndicator'
 import { AssetSelector } from '@/components/AssetSelector'
+import { getMockData } from '@/lib/mockData'
 import { DashboardCharts } from '@/components/DashboardCharts'
 import { TradingViewWidget } from '@/components/TradingViewWidget'
-import { StatsCard as BaseStatsCard } from '@/components/StatsCard'
-import { SignalBadge as BaseSignalBadge } from '@/components/SignalBadge'
 import { getPredictedSignal } from '@/lib/api'
 import { TrendingUp, TrendingDown, Zap, Target, RefreshCw } from 'lucide-react'
-import type { SignalResponse } from '@/lib/api'
+import type { DashboardData } from '@/lib/mockData'
 
 export default function DashboardPage() {
   const [selectedAsset, setSelectedAsset] = useState<'XAU/USD' | 'ETH/USD'>('XAU/USD')
-  const [dashboardData, setDashboardData] = useState<SignalResponse | null>(null)
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [autoRefresh, setAutoRefresh] = useState(true)
 
-  // Load real market data from backend API only
+  // Load data on mount and when asset changes
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true)
       try {
+        // Try to fetch from backend API
         const signalData = await getPredictedSignal(selectedAsset)
         
         if (signalData) {
-          setDashboardData(signalData as any)
-          console.log('[v0] Professional market data loaded from backend:', selectedAsset)
+          // Map API response to dashboard data structure
+          const data = {
+            ...getMockData(selectedAsset),
+            currentPrice: signalData.price,
+            signal: {
+              action: signalData.signal as 'BUY' | 'SELL' | 'WAIT',
+              confidence: signalData.confidence,
+              timestamp: signalData.timestamp,
+            },
+            technicalIndicators: signalData.technicalIndicators,
+            risk: signalData.riskManagement,
+          }
+          setDashboardData(data)
+          console.log('[v0] Data loaded from backend API for:', selectedAsset)
         } else {
-          // Show error state instead of mock data
-          setDashboardData(null)
-          console.error('[v0] Unable to load market data - backend API unavailable')
+          // Fallback to mock data
+          const data = getMockData(selectedAsset)
+          setDashboardData(data)
+          console.log('[v0] Using mock data - backend API unavailable')
         }
       } catch (error) {
-        console.error('[v0] Critical error loading market data:', error)
-        setDashboardData(null)
+        console.error('[v0] Error loading data:', error)
+        const data = getMockData(selectedAsset)
+        setDashboardData(data)
       } finally {
         setIsLoading(false)
       }
@@ -47,67 +61,79 @@ export default function DashboardPage() {
     loadData()
   }, [selectedAsset])
 
-  // Auto-refresh real data every 30 seconds (no mock fallback)
+  // Auto-refresh data every 30 seconds
   useEffect(() => {
-    if (!autoRefresh || !dashboardData) return
+    if (!autoRefresh) return
 
     const interval = setInterval(async () => {
-      try {
-        const signalData = await getPredictedSignal(selectedAsset)
-        
-        if (signalData) {
-          setDashboardData(signalData as any)
-          setLastUpdated(new Date())
-          console.log('[v0] Auto-refresh: Real market data updated')
-        } else {
-          console.warn('[v0] Auto-refresh: Could not fetch updated data from backend')
+      if (dashboardData) {
+        try {
+          const signalData = await getPredictedSignal(selectedAsset)
+          
+          if (signalData) {
+            const updatedData = {
+              ...dashboardData,
+              currentPrice: signalData.price,
+              signal: {
+                action: signalData.signal as 'BUY' | 'SELL' | 'WAIT',
+                confidence: signalData.confidence,
+                timestamp: signalData.timestamp,
+              },
+              technicalIndicators: signalData.technicalIndicators,
+              risk: signalData.riskManagement,
+            }
+            setDashboardData(updatedData)
+            console.log('[v0] Auto-refresh: Data updated from backend')
+          } else {
+            const data = getMockData(selectedAsset)
+            setDashboardData(data)
+          }
+        } catch (error) {
+          console.error('[v0] Auto-refresh failed:', error)
+          const data = getMockData(selectedAsset)
+          setDashboardData(data)
         }
-      } catch (error) {
-        console.error('[v0] Auto-refresh error:', error)
+        setLastUpdated(new Date())
       }
     }, 30000)
 
     return () => clearInterval(interval)
   }, [autoRefresh, selectedAsset, dashboardData])
 
-  const handlePredictSignal = async () => {
+  const handleRefresh = async () => {
     setIsLoading(true)
     try {
       const signalData = await getPredictedSignal(selectedAsset)
       
       if (signalData) {
-        setDashboardData(signalData as any)
-        setLastUpdated(new Date())
-        console.log('[v0] Predict Signal: New analysis from backend AI model')
+        const updatedData = {
+          ...dashboardData!,
+          currentPrice: signalData.price,
+          signal: {
+            action: signalData.signal as 'BUY' | 'SELL' | 'WAIT',
+            confidence: signalData.confidence,
+            timestamp: signalData.timestamp,
+          },
+          technicalIndicators: signalData.technicalIndicators,
+          risk: signalData.riskManagement,
+        }
+        setDashboardData(updatedData)
+        console.log('[v0] Manual refresh: Data updated from backend')
       } else {
-        console.error('[v0] Unable to generate prediction - backend unavailable')
+        const data = getMockData(selectedAsset)
+        setDashboardData(data)
       }
     } catch (error) {
-      console.error('[v0] Prediction generation failed:', error)
+      console.error('[v0] Refresh failed:', error)
+      const data = getMockData(selectedAsset)
+      setDashboardData(data)
     } finally {
+      setLastUpdated(new Date())
       setIsLoading(false)
     }
   }
 
-  // Show error state if backend is unavailable
-  if (!dashboardData) {
-    return (
-      <div className="flex bg-slate-50 min-h-screen">
-        <Sidebar />
-        <main className="flex-1 p-8 flex items-center justify-center">
-          <div className="bg-white border border-red-200 rounded-xl p-8 max-w-md text-center">
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Backend Unavailable</h2>
-            <p className="text-slate-600 mb-4">
-              Unable to connect to the backend API. Please ensure the backend server is running and NEXT_PUBLIC_API_URL is configured correctly.
-            </p>
-            <p className="text-sm text-slate-500 font-mono">
-              Expected: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}
-            </p>
-          </div>
-        </main>
-      </div>
-    )
-  }
+  if (!dashboardData) return null
 
   const getSignalColor = (signal: string) => {
     switch (signal) {
@@ -120,7 +146,14 @@ export default function DashboardPage() {
     }
   }
 
-
+  const handlePredictSignal = async () => {
+    setIsLoading(true)
+    try {
+      // Try to fetch from backend API
+      const signalData = await getPredictedSignal(selectedAsset)
+      
+      if (signalData) {
+        // Backend API returned data - map it to our dashboard data structure
         const updatedData = {
           ...dashboardData,
           currentPrice: signalData.price,
@@ -208,8 +241,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Live TradingView Chart - Synchronized with real market data */}
+          {/* TradingView Live Chart - Show only selected asset */}
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+            <h3 className="text-slate-900 font-semibold mb-4">
+              {selectedAsset} Live Chart
+            </h3>
             <TradingViewWidget 
               symbol={selectedAsset === 'XAU/USD' ? 'XAUUSD' : 'ETHUSD'} 
               height="500px" 
@@ -401,9 +437,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
-      
-      {/* Live Chat Support */}
-      <LiveChat />
     </div>
   )
 }
