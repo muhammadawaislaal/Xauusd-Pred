@@ -72,8 +72,8 @@ export default function Footer() {
               <p>Trading involves substantial risk. Past performance does not guarantee future results.</p>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-2">Support</h4>
-              <p>Email: umtitechsolutions@gmail.com for technical support and inquiries.</p>
+              <h4 className="font-semibold text-foreground mb-2">Subscription</h4>
+              <p>Contact administrator for subscription details, renewals, and account management.</p>
             </div>
           </div>
         </div>

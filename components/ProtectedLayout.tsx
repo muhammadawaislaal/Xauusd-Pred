@@ -9,7 +9,7 @@ interface ProtectedLayoutProps {
 }
 
 export function ProtectedLayout({ children }: ProtectedLayoutProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -17,6 +17,11 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
       router.push('/login');
     }
   }, [isAuthenticated, isLoading, router]);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   if (isLoading) {
     return (
@@ -31,9 +36,36 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <div className="relative">
+      {/* User session bar */}
+      <div className="bg-gradient-to-r from-primary to-accent text-white px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between text-sm sticky top-0 z-40 shadow-md">
+        <div className="flex items-center gap-6 flex-1">
+          <div>
+            <p className="font-semibold text-white">User: <span className="font-mono">{user.username}</span></p>
+            <p className="text-xs text-white/80 mt-1">IP: <span className="font-mono">{user.ip}</span></p>
+          </div>
+          {user.subscription && (
+            <div className="hidden md:block border-l border-white/30 pl-6">
+              <p className="font-semibold text-white">Subscription: <span className="font-mono capitalize">{user.subscription.status}</span></p>
+              <p className="text-xs text-white/80 mt-1">Expires: <span className="font-mono">{new Date(user.subscription.expiryDate || '').toLocaleDateString()}</span></p>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={handleLogout}
+          className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded font-medium text-sm transition-colors whitespace-nowrap ml-4"
+        >
+          Logout
+        </button>
+      </div>
+
+      {/* Main content */}
+      {children}
+    </div>
+  );
 }
