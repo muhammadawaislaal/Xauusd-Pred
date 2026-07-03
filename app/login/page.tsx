@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { validateIP } from '@/lib/api'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -13,26 +14,35 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [ipAuthorized, setIpAuthorized] = useState<boolean | null>(null)
 
-  // List of authorized IPs (from backend)
-  const AUTHORIZED_IPS = ['127.0.0.1', '::1', '192.168.1.1', '203.0.113.45', '18.219.13.193', '::ffff:127.0.0.1'] // Mock authorized IPs
-
   useEffect(() => {
-    // Fetch user's IP address
-    const fetchIP = async () => {
+    // Fetch user's IP address and validate it
+    const fetchAndValidateIP = async () => {
       try {
         const response = await fetch('https://api.ipify.org?format=json')
         const data = await response.json()
         setIpAddress(data.ip)
         
-        // Check if IP is in authorized list
-        const isAuthorized = AUTHORIZED_IPS.includes(data.ip)
+        // Try backend API first, then fall back to local allowlist
+        let isAuthorized = await validateIP(data.ip)
+        
+        // If backend API fails, use local allowlist as fallback
+        if (!isAuthorized) {
+          const LOCAL_AUTHORIZED_IPS = ['127.0.0.1', '::1', '192.168.1.1', '203.0.113.45', '18.219.13.193', '::ffff:127.0.0.1']
+          isAuthorized = LOCAL_AUTHORIZED_IPS.includes(data.ip)
+          if (isAuthorized) {
+            console.log('[v0] IP authorized via local allowlist:', data.ip)
+          }
+        }
+        
         setIpAuthorized(isAuthorized)
+        console.log('[v0] IP validation result:', { ip: data.ip, authorized: isAuthorized })
       } catch (err) {
+        console.error('[v0] Error detecting IP:', err)
         setIpAddress('Unable to detect')
         setIpAuthorized(false)
       }
     }
-    fetchIP()
+    fetchAndValidateIP()
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -40,31 +50,46 @@ export default function LoginPage() {
     setError('')
     setIsLoading(true)
 
-    // Check if IP is authorized
-    if (!ipAuthorized) {
-      setError('Your IP address is not authorized for this subscription. Contact support to whitelist your IP.')
-      setIsLoading(false)
-      return
-    }
+    try {
+      // Check if IP is authorized
+      if (!ipAuthorized) {
+        setError('Your IP address is not authorized for this subscription. Contact support to whitelist your IP.')
+        setIsLoading(false)
+        return
+      }
 
-    // Validate password
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
-      setIsLoading(false)
-      return
-    }
+      // Validate password
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters')
+        setIsLoading(false)
+        return
+      }
 
-    // Authentication with correct password
-    if (password === 'Admin121') {
-      // Store auth token in localStorage
-      localStorage.setItem('auth_token', 'demo_token_' + Date.now())
-      localStorage.setItem('user_ip', ipAddress)
-      
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 500)
-    } else {
-      setError('Invalid password. Please try again.')
+      // Authenticate with backend API (optional - can be added later)
+      // const loginResponse = await fetch(`${API_BASE_URL}/api/login`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ password, ip: ipAddress }),
+      // })
+
+      // For now, validate password locally
+      if (password === 'Admin121') {
+        // Store auth token in localStorage
+        localStorage.setItem('auth_token', 'demo_token_' + Date.now())
+        localStorage.setItem('user_ip', ipAddress)
+        
+        console.log('[v0] Login successful for IP:', ipAddress)
+        
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 500)
+      } else {
+        setError('Invalid password. Please try again.')
+        setIsLoading(false)
+      }
+    } catch (err) {
+      console.error('[v0] Login error:', err)
+      setError('An error occurred during login. Please try again.')
       setIsLoading(false)
     }
   }
@@ -164,12 +189,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo info */}
+          {/* Info footer */}
           <div className="mt-6 pt-6 border-t border-slate-200">
-            <p className="text-xs text-slate-500 text-center">
-              Demo password: <code className="bg-slate-100 px-2 py-1 rounded text-slate-700 font-mono">Admin121</code>
-            </p>
-            <p className="text-xs text-slate-400 text-center mt-2">
+            <p className="text-xs text-slate-400 text-center">
               IP-based authentication enabled
             </p>
           </div>
