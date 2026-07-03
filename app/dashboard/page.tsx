@@ -256,14 +256,14 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               label="Current Price"
-              value={`$${dashboardData.currentPrice.toFixed(2)}`}
+              value={`${dashboardData.currentPrice.toFixed(2)}`}
               change={dashboardData.changePercent}
               icon={dashboardData.changePercent >= 0 ? <TrendingUp /> : <TrendingDown />}
               color={dashboardData.changePercent >= 0 ? 'green' : 'red'}
             />
             <StatsCard
               label="High / Low"
-              value={`$${dashboardData.high.toFixed(2)}`}
+              value={`${dashboardData.high.toFixed(2)}`}
               change={((dashboardData.high - dashboardData.low) / dashboardData.low) * 100}
               icon={<Zap />}
               color="blue"
@@ -271,13 +271,15 @@ export default function DashboardPage() {
             <StatsCard
               label="Trading Signal"
               value={dashboardData.signal.action}
+              change={dashboardData.signal.pips}
               icon={<Target />}
-              color={getSignalColor(dashboardData.signal.action) as any}
+              color={getSignalColor(dashboardData.signal.action)}
             />
             <StatsCard
               label="Predicted Price (20 min)"
-              value={`$${dashboardData.predictedPrice.toFixed(2)}`}
+              value={`${dashboardData.predictedPrice.toFixed(2)}`}
               change={((dashboardData.predictedPrice - dashboardData.currentPrice) / dashboardData.currentPrice) * 100}
+              icon={<TrendingUp />}
               color="purple"
             />
           </div>
@@ -292,15 +294,15 @@ export default function DashboardPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-slate-600">Entry:</span>
-                    <span className="text-slate-900 font-mono font-bold">${dashboardData.risk.entry.toFixed(2)}</span>
+                    <span className="text-slate-900 font-mono font-bold">{dashboardData.risk.entry.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Stop Loss:</span>
-                    <span className="text-red-600 font-mono font-bold">${dashboardData.risk.stopLoss.toFixed(2)}</span>
+                    <span className="text-red-600 font-mono font-bold">{dashboardData.risk.stopLoss.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-600">Take Profit:</span>
-                    <span className="text-green-600 font-mono font-bold">${dashboardData.risk.takeProfit.toFixed(2)}</span>
+                    <span className="text-green-600 font-mono font-bold">{dashboardData.risk.takeProfit.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -312,15 +314,15 @@ export default function DashboardPage() {
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
                   <p className="text-slate-600 text-xs mb-2 font-medium">ENTRY POINT</p>
-                  <p className="text-slate-900 font-mono font-bold text-lg">${dashboardData.risk.entry.toFixed(2)}</p>
+                  <p className="text-slate-900 font-mono font-bold text-lg">{dashboardData.risk.entry.toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-slate-600 text-xs mb-2 font-medium">STOP LOSS</p>
-                  <p className="text-red-600 font-mono font-bold text-lg">${dashboardData.risk.stopLoss.toFixed(2)}</p>
+                  <p className="text-red-600 font-mono font-bold text-lg">{dashboardData.risk.stopLoss.toFixed(2)}</p>
                 </div>
                 <div>
                   <p className="text-slate-600 text-xs mb-2 font-medium">TAKE PROFIT</p>
-                  <p className="text-green-600 font-mono font-bold text-lg">${dashboardData.risk.takeProfit.toFixed(2)}</p>
+                  <p className="text-green-600 font-mono font-bold text-lg">{dashboardData.risk.takeProfit.toFixed(2)}</p>
                 </div>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center justify-between">
@@ -401,7 +403,7 @@ export default function DashboardPage() {
                   {dashboardData.history.map((entry, idx) => (
                     <tr key={idx} className="border-b border-slate-200 hover:bg-slate-50 transition">
                       <td className="py-3 px-4 text-slate-900">{entry.date}</td>
-                      <td className="py-3 px-4 text-slate-900 font-mono">${entry.price.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-slate-900 font-mono">{entry.price.toFixed(2)}</td>
                       <td className="py-3 px-4">
                         <SignalBadge signal={entry.signal as any} size="sm" />
                       </td>
@@ -420,7 +422,18 @@ export default function DashboardPage() {
 
           {/* Footer */}
           <div className="text-center py-8 text-slate-600 text-sm border-t border-slate-300">
-            <p>Developed by Muhammad Awais Laal • Educational Project</p>
+            <p>
+              Developed by{' '}
+              <a
+                href="https://muhammadawaislaal.github.io/My_PortFolio/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-700 underline hover:underline font-semibold transition"
+              >
+                Muhammad Awais Laal
+              </a>
+              {' '}• Educational Project
+            </p>
           </div>
         </div>
       </main>

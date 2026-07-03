@@ -27,7 +27,7 @@ export default function LoginPage() {
         
         // If backend API fails, use local allowlist as fallback
         if (!isAuthorized) {
-          const LOCAL_AUTHORIZED_IPS = ['127.0.0.1', '::1', '192.168.1.1', '203.0.113.45', '18.219.13.193', '::ffff:127.0.0.1']
+          const LOCAL_AUTHORIZED_IPS = ['127.0.0.1', '::1', '192.168.1.1', '203.0.113.45', '18.219.13.193', '::ffff:127.0.0.1', '154.80.78.230']
           isAuthorized = LOCAL_AUTHORIZED_IPS.includes(data.ip)
           if (isAuthorized) {
             console.log('[v0] IP authorized via local allowlist:', data.ip)
