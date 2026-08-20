@@ -130,7 +130,7 @@ SUPABASE_KEY = configured_value("SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_KEY", "SU
 
 # ------------------ MANUAL LOGIN FALLBACK ------------------
 # Admin manual login: change these two values only if the admin credentials/IP change.
-ADMIN_PASSWORD = "@awaislaal01#$"
+ADMIN_PASSWORD = configured_value("ADMIN_PASSWORD", default="@awaislaal01#$")
 ADMIN_IP = configured_value("ADMIN_IP", default="149.40.167.232")
 
 # Manual user format: (password, IP, username). Passwords stay plaintext here by request.

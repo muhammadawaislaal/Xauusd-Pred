@@ -380,6 +380,22 @@ git push origin main
 # - Deploy main branch
 ```
 
+### Streamlit Cloud Secrets
+
+In the deployed app, open **Settings -> Secrets** and add:
+
+```toml
+SUPABASE_URL = "https://your-project.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY = "your-server-only-service-role-key"
+TWELVEDATA_API_KEY = "your-twelve-data-key"
+ADMIN_PASSWORD = "your-admin-password"
+ADMIN_IP = "your-cloud-approved-ip"
+```
+
+Run the contents of [`supabase_schema.sql`](supabase_schema.sql) once in the Supabase SQL Editor before opening the app. Never commit `.env`, Supabase keys, or user records to GitHub.
+
+**IP note:** `api64.ipify.org` sees the public IP of the Streamlit server. On Streamlit Community Cloud this is not the visitor's home IP and can change. Strict per-user browser-IP authentication therefore requires a trusted reverse proxy that forwards the client IP, or `ADMIN_IP` must be set to the server egress IP. Supabase password and account-status checks remain active regardless.
+
 ### Self-Hosted Deployment
 ```bash
 # Install system dependencies
