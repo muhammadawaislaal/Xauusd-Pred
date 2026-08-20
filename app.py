@@ -1,6 +1,7 @@
 import os
 import pickle
 import hashlib
+import ipaddress
 import threading
 import schedule
 import time
@@ -15,6 +16,7 @@ from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 from xgboost import XGBRegressor
 import streamlit.components.v1 as components
+from streamlit_js_eval import streamlit_js_eval
 from ta.trend import MACD, EMAIndicator, ADXIndicator, CCIIndicator
 from ta.momentum import RSIIndicator, StochasticOscillator
 from ta.volatility import BollingerBands, AverageTrueRange
@@ -200,27 +202,46 @@ def permanently_delete_user(username):
         logger.error("Supabase user delete failed: %s", error)
         raise RuntimeError("Permanent deletion is not enabled in Supabase yet. Run the updated supabase_schema.sql in Supabase SQL Editor.") from error
 
-def get_client_ip():
-    """Return the visitor IP supplied by the hosting proxy.
+def is_public_ip(value):
+    try:
+        address = ipaddress.ip_address(value.strip())
+        return not (address.is_private or address.is_loopback or address.is_reserved or address.is_unspecified)
+    except ValueError:
+        return False
 
-    A server-side public-IP service can only return the Streamlit server's
-    address, so it must never be used for per-user authentication.
-    """
+def get_proxy_client_ip():
+    """Return a valid public visitor IP supplied by a trusted proxy."""
     try:
         headers = st.context.headers
     except (AttributeError, RuntimeError):
         headers = {}
 
-    # These headers are populated by a reverse proxy such as Nginx or the
-    # Streamlit hosting platform. Prefer the first address in X-Forwarded-For.
+    # Only trust a forwarded value when it is a public address. A local
+    # Streamlit proxy commonly reports the visitor's private LAN address.
     for header_name in ("X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP"):
         value = headers.get(header_name, "").strip()
         if value:
             client_ip = value.split(",", 1)[0].strip()
-            if client_ip:
+            if is_public_ip(client_ip):
                 return client_ip
+    return None
 
-    return headers.get("Remote-Addr", "127.0.0.1").strip() or "127.0.0.1"
+def get_browser_public_ip():
+    """Ask the visitor's browser for its public egress IP."""
+    result = streamlit_js_eval(
+        js_expressions="fetch('https://api64.ipify.org?format=json').then(response => response.json()).then(data => data.ip).catch(() => null)",
+        key="browser_public_ip",
+        default=None,
+    )
+    if isinstance(result, str) and is_public_ip(result):
+        return result.strip()
+    return None
+
+def get_client_ip():
+    proxy_ip = get_proxy_client_ip()
+    if proxy_ip:
+        return proxy_ip
+    return get_browser_public_ip()
 
 def check_manual_fallback(password, client_ip):
     for manual_password, manual_ip, username in MANUAL_FALLBACK_USERS:
@@ -333,6 +354,10 @@ def check_access():
         return st.session_state.auth
     client_ip = get_client_ip()
     st.sidebar.markdown("### Secure sign in")
+    if not client_ip:
+        st.sidebar.info("Detecting your public IP address...")
+        st.sidebar.caption("A public IP is required before secure sign-in.")
+        st.stop()
     st.sidebar.caption(f"Verified network: {client_ip}")
     with st.sidebar.expander("Terms and services", expanded=False):
         st.markdown("""

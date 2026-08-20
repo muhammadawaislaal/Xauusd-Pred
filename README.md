@@ -394,7 +394,7 @@ ADMIN_IP = "your-cloud-approved-ip"
 
 Run the contents of [`supabase_schema.sql`](supabase_schema.sql) once in the Supabase SQL Editor before opening the app. Never commit `.env`, Supabase keys, or user records to GitHub.
 
-**IP note:** The app reads the visitor address from `X-Forwarded-For`, `X-Real-IP`, `CF-Connecting-IP`, or the direct request address. The reverse proxy must remove any incoming copies of these headers and set them from the actual connection, otherwise IP-based authentication is not trustworthy. Streamlit Community Cloud must expose one of these headers for per-user IP authentication to work; the app cannot discover a browser's public IP by calling an external service because that call runs on the Streamlit server. If no client address is forwarded, the app uses `127.0.0.1` and access will not match a remote user's configured IP.
+**IP note:** The app first reads a public visitor address from `X-Forwarded-For`, `X-Real-IP`, or `CF-Connecting-IP`. If a local Streamlit proxy only supplies a private LAN address such as `192.168.0.152`, the app rejects it and asks the visitor's browser to query `api64.ipify.org`, returning the visitor's public address such as `149.40.165.75`. The app will not authenticate until a valid public IP is available. The reverse proxy must remove incoming copies of forwarded headers and set them from the actual connection, otherwise IP-based authentication is not trustworthy.
 
 ### Self-Hosted Deployment
 ```bash
