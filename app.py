@@ -201,11 +201,26 @@ def permanently_delete_user(username):
         raise RuntimeError("Permanent deletion is not enabled in Supabase yet. Run the updated supabase_schema.sql in Supabase SQL Editor.") from error
 
 def get_client_ip():
+    """Return the visitor IP supplied by the hosting proxy.
+
+    A server-side public-IP service can only return the Streamlit server's
+    address, so it must never be used for per-user authentication.
+    """
     try:
-        response = requests.get("https://api64.ipify.org?format=json", timeout=4)
-        return response.json().get("ip", "127.0.0.1")
-    except requests.RequestException:
-        return "127.0.0.1"
+        headers = st.context.headers
+    except (AttributeError, RuntimeError):
+        headers = {}
+
+    # These headers are populated by a reverse proxy such as Nginx or the
+    # Streamlit hosting platform. Prefer the first address in X-Forwarded-For.
+    for header_name in ("X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP"):
+        value = headers.get(header_name, "").strip()
+        if value:
+            client_ip = value.split(",", 1)[0].strip()
+            if client_ip:
+                return client_ip
+
+    return headers.get("Remote-Addr", "127.0.0.1").strip() or "127.0.0.1"
 
 def check_manual_fallback(password, client_ip):
     for manual_password, manual_ip, username in MANUAL_FALLBACK_USERS:

@@ -195,7 +195,7 @@ TAKE_PROFIT_PIPS = {
 
 ### 1. Access Control
 1. Enter a user password in the sidebar.
-2. The system validates the password, current public IP address, account status, and subscription expiry.
+2. The system validates the password, the visitor IP address supplied by the hosting proxy, account status, and subscription expiry.
 3. Access is granted to the prediction dashboard only when all checks pass.
 
 The administrator access password is `@awaislaal01#$`. It opens the Apex X FX Admin Dashboard, where the administrator can create users with a username, password, and allowed IP address, update credentials, block or unblock accounts, and archive users. Archived records are retained in the database and are not physically deleted. Blocked users receive a subscription-payment message when they try to sign in.
@@ -394,7 +394,7 @@ ADMIN_IP = "your-cloud-approved-ip"
 
 Run the contents of [`supabase_schema.sql`](supabase_schema.sql) once in the Supabase SQL Editor before opening the app. Never commit `.env`, Supabase keys, or user records to GitHub.
 
-**IP note:** `api64.ipify.org` sees the public IP of the Streamlit server. On Streamlit Community Cloud this is not the visitor's home IP and can change. Strict per-user browser-IP authentication therefore requires a trusted reverse proxy that forwards the client IP, or `ADMIN_IP` must be set to the server egress IP. Supabase password and account-status checks remain active regardless.
+**IP note:** The app reads the visitor address from `X-Forwarded-For`, `X-Real-IP`, `CF-Connecting-IP`, or the direct request address. The reverse proxy must remove any incoming copies of these headers and set them from the actual connection, otherwise IP-based authentication is not trustworthy. Streamlit Community Cloud must expose one of these headers for per-user IP authentication to work; the app cannot discover a browser's public IP by calling an external service because that call runs on the Streamlit server. If no client address is forwarded, the app uses `127.0.0.1` and access will not match a remote user's configured IP.
 
 ### Self-Hosted Deployment
 ```bash
