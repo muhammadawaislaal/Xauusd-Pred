@@ -136,7 +136,7 @@ ADMIN_IP = configured_value("ADMIN_IP", default="34.127.33.101")
 # Manual user format: (password, IP, username). Passwords stay plaintext here by request.
 # To add another user, copy the line above, paste it here, and change the password/IP/username.
 MANUAL_FALLBACK_USERS = [
-    ("ChangeThisPassword", "149.40.167.232", "manual-sample"),
+    ("ChangeThisPassword", "34.127.33.101", "manual-sample"),
 ]
 
 def hash_password(password):
